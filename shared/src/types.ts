@@ -21,6 +21,7 @@ export { AGENT_MESSAGE_PAYLOAD_TYPE } from './modes'
 export type {
     AgentFlavor,
     ClaudePermissionMode,
+    CodebuddyPermissionMode,
     CodexCollaborationMode,
     CodexCollaborationModeOption,
     CodexPermissionMode,

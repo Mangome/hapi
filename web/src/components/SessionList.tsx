@@ -297,6 +297,10 @@ const FLAVOR_BADGES: Record<string, { label: string; colors: string }> = {
         label: 'Op',
         colors: 'bg-[#15803d] text-white',
     },
+    codebuddy: {
+        label: 'CB',
+        colors: 'bg-[#7c3aed] text-white',
+    },
 }
 
 function FlavorIcon({ flavor, className }: { flavor?: string | null; className?: string }) {

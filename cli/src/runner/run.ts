@@ -326,6 +326,10 @@ export async function startRunner(): Promise<void> {
             extraEnv = {
               CLAUDE_CODE_OAUTH_TOKEN: options.token
             };
+          } else if (options.agent === 'codebuddy') {
+            extraEnv = {
+              CODEBUDDY_AUTH_TOKEN: options.token
+            };
           }
         }
 
@@ -836,7 +840,9 @@ export function buildCliArgs(
         ? 'gemini'
         : agent === 'opencode'
           ? 'opencode'
-          : 'claude';
+          : agent === 'codebuddy'
+            ? 'codebuddy'
+            : 'claude';
   const args = [agentCommand];
   if (options.resumeSessionId) {
     if (agent === 'codex') {

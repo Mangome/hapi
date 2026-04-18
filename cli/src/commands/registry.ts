@@ -5,6 +5,7 @@ import { cursorCommand } from './cursor'
 import { connectCommand } from './connect'
 import { runnerCommand } from './runner'
 import { doctorCommand } from './doctor'
+import { codebuddyCommand } from './codebuddy'
 import { geminiCommand } from './gemini'
 import { opencodeCommand } from './opencode'
 import { hookForwarderCommand } from './hookForwarder'
@@ -17,6 +18,7 @@ const COMMANDS: CommandDefinition[] = [
     authCommand,
     connectCommand,
     codexCommand,
+    codebuddyCommand,
     cursorCommand,
     geminiCommand,
     opencodeCommand,
