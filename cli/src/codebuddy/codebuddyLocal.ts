@@ -2,14 +2,6 @@ import { logger } from '@/ui/logger';
 import { spawnWithTerminalGuard } from '@/utils/spawnWithTerminalGuard';
 import type { PermissionMode } from './types';
 
-function mapPermissionMode(mode: PermissionMode | undefined): string | undefined {
-    if (!mode || mode === 'default') return undefined;
-    if (mode === 'acceptEdits') return 'acceptEdits';
-    if (mode === 'plan') return 'plan';
-    if (mode === 'bypassPermissions') return 'bypassPermissions';
-    return undefined;
-}
-
 export async function codebuddyLocal(opts: {
     path: string;
     sessionId: string | null;
@@ -25,9 +17,10 @@ export async function codebuddyLocal(opts: {
     if (opts.model) {
         args.push('--model', opts.model);
     }
-    const permMode = mapPermissionMode(opts.permissionMode);
-    if (permMode) {
-        args.push('--permission-mode', permMode);
+    if (opts.permissionMode === 'bypassPermissions') {
+        args.push('--dangerously-skip-permissions');
+    } else if (opts.permissionMode && opts.permissionMode !== 'default') {
+        args.push('--permission-mode', opts.permissionMode);
     }
 
     logger.debug(`[CodebuddyLocal] Spawning codebuddy with args: ${JSON.stringify(args)}`);
