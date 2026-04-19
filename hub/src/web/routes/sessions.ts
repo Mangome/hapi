@@ -1,4 +1,4 @@
-import { getPermissionModesForFlavor, isPermissionModeAllowedForFlavor, toSessionSummary } from '@hapi/protocol'
+import { getPermissionModesForFlavor, isPermissionModeAllowedForFlavor, supportsModelChange, toSessionSummary } from '@hapi/protocol'
 import { CodexCollaborationModeSchema, PermissionModeSchema } from '@hapi/protocol/schemas'
 import { Hono } from 'hono'
 import { z } from 'zod'
@@ -320,8 +320,8 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         }
 
         const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
-        if (flavor !== 'claude' && flavor !== 'gemini') {
-            return c.json({ error: 'Model selection is only supported for Claude and Gemini sessions' }, 400)
+        if (!supportsModelChange(flavor)) {
+            return c.json({ error: 'Model selection is not supported for this session type' }, 400)
         }
 
         try {
