@@ -2,33 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import { MessageBuffer, type BufferedMessage } from './messageBuffer';
 import { useSwitchControls } from './useSwitchControls';
+import { getMessageColor, formatMessage, extractTag, filterVisibleMessages } from './messageFormatting';
 
-interface OpencodeDisplayProps {
+export interface AgentDisplayConfig {
+    agentName: string;
+    showModelPermission: boolean;
+}
+
+export const AGENT_CONFIGS = {
+    claude:     { agentName: 'Claude',     showModelPermission: false },
+    codex:      { agentName: 'Codex',      showModelPermission: false },
+    gemini:     { agentName: 'Gemini',     showModelPermission: true  },
+    codebuddy:  { agentName: 'CodeBuddy',  showModelPermission: true  },
+    opencode:   { agentName: 'OpenCode',   showModelPermission: true  },
+    cursor:     { agentName: 'Cursor',     showModelPermission: true  },
+} as const satisfies Record<string, AgentDisplayConfig>;
+
+interface AgentDisplayProps {
+    config: AgentDisplayConfig;
     messageBuffer: MessageBuffer;
     logPath?: string;
     onExit?: () => void;
     onSwitchToLocal?: () => void;
 }
 
-function extractTag(messages: BufferedMessage[], tag: 'MODEL' | 'MODE'): string | null {
-    const prefix = `[${tag}:`;
-    for (let index = messages.length - 1; index >= 0; index -= 1) {
-        const message = messages[index];
-        if (message.type !== 'system') {
-            continue;
-        }
-        if (!message.content.startsWith(prefix)) {
-            continue;
-        }
-        const match = message.content.match(/\[\w+:(.+?)\]/);
-        if (match && match[1]) {
-            return match[1];
-        }
-    }
-    return null;
-}
-
-export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
+export const AgentDisplay: React.FC<AgentDisplayProps> = ({
+    config,
     messageBuffer,
     logPath,
     onExit,
@@ -50,55 +49,26 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
 
         const unsubscribe = messageBuffer.onUpdate((newMessages) => {
             setMessages(newMessages);
-            const nextModel = extractTag(newMessages, 'MODEL');
-            if (nextModel) {
-                setModel(nextModel);
-            }
-            const nextMode = extractTag(newMessages, 'MODE');
-            if (nextMode) {
-                setPermissionMode(nextMode);
+            if (config.showModelPermission) {
+                const nextModel = extractTag(newMessages, 'MODEL');
+                if (nextModel) {
+                    setModel(nextModel);
+                }
+                const nextMode = extractTag(newMessages, 'MODE');
+                if (nextMode) {
+                    setPermissionMode(nextMode);
+                }
             }
         });
 
         return () => {
             unsubscribe();
         };
-    }, [messageBuffer]);
+    }, [messageBuffer, config.showModelPermission]);
 
-    const getMessageColor = (type: BufferedMessage['type']): string => {
-        switch (type) {
-            case 'user': return 'magenta';
-            case 'assistant': return 'cyan';
-            case 'system': return 'blue';
-            case 'tool': return 'yellow';
-            case 'result': return 'green';
-            case 'status': return 'gray';
-            default: return 'white';
-        }
-    };
-
-    const formatMessage = (msg: BufferedMessage): string => {
-        const lines = msg.content.split('\n');
-        const maxLineLength = Math.max(1, terminalWidth - 10);
-        return lines.map(line => {
-            if (line.length <= maxLineLength) return line;
-            const chunks: string[] = [];
-            for (let i = 0; i < line.length; i += maxLineLength) {
-                chunks.push(line.slice(i, i + maxLineLength));
-            }
-            return chunks.join('\n');
-        }).join('\n');
-    };
-
-    const visibleMessages = messages.filter((msg) => {
-        if (msg.type === 'system' && msg.content.startsWith('[MODEL:')) {
-            return false;
-        }
-        if (msg.type === 'system' && msg.content.startsWith('[MODE:')) {
-            return false;
-        }
-        return true;
-    });
+    const visibleMessages = config.showModelPermission
+        ? filterVisibleMessages(messages)
+        : messages;
 
     return (
         <Box flexDirection="column" width={terminalWidth} height={terminalHeight}>
@@ -112,8 +82,8 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                 overflow="hidden"
             >
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="gray" bold>OpenCode Agent Messages</Text>
-                    <Text color="gray" dimColor>{'-'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
+                    <Text color="gray" bold>{config.agentName} Agent Messages</Text>
+                    <Text color="gray" dimColor>{'─'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
                 </Box>
 
                 <Box flexDirection="column" height={terminalHeight - 10} overflow="hidden">
@@ -125,7 +95,7 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                             .map((msg) => (
                                 <Box key={msg.id} flexDirection="column" marginBottom={1}>
                                     <Text color={getMessageColor(msg.type)} dimColor>
-                                        {formatMessage(msg)}
+                                        {formatMessage(msg.content, terminalWidth - 10)}
                                     </Text>
                                 </Box>
                             ))
@@ -162,18 +132,17 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                         </Text>
                     ) : confirmationMode === 'switch' ? (
                         <Text color="yellow" bold>
-                            Press space again to switch to local mode
+                            Press Space again to switch to local mode
                         </Text>
                     ) : (
                         <Text color="green" bold>
-                            OpenCode running {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
+                            {config.agentName} running {onSwitchToLocal ? '(Space → local, Ctrl-C → exit)' : '(Ctrl-C to exit)'}
                         </Text>
                     )}
-                    {(model || permissionMode) && (
+                    {config.showModelPermission && (model || permissionMode) && (
                         <Text color="gray" dimColor>
-                            {[model ? `Model: ${model}` : null, permissionMode ? `Permission: ${permissionMode}` : null]
-                                .filter(Boolean)
-                                .join(' | ')}
+                            {model ? `Model: ${model}` : 'Model: default'}
+                            {permissionMode ? ` | Permission: ${permissionMode}` : ''}
                         </Text>
                     )}
                     {process.env.DEBUG && logPath && (

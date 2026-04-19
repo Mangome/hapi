@@ -4,7 +4,7 @@ import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
 import { convertAgentMessage } from '@/agent/messageConverter';
 import type { AgentMessage, McpServerStdio, PromptContent } from '@/agent/types';
 import { RemoteLauncherBase, type RemoteLauncherDisplayContext, type RemoteLauncherExitReason } from '@/modules/common/remote/RemoteLauncherBase';
-import { GeminiDisplay } from '@/ui/ink/GeminiDisplay';
+import { AgentDisplay, AGENT_CONFIGS } from '@/ui/ink/AgentDisplay';
 import type { CodebuddySession } from './session';
 import type { PermissionMode } from './types';
 import { createCodebuddyBackend } from './utils/codebuddyBackend';
@@ -33,8 +33,12 @@ class CodebuddyRemoteLauncher extends RemoteLauncherBase {
         });
     }
 
+    protected getDisplayConfig() {
+        return AGENT_CONFIGS.codebuddy;
+    }
+
     protected createDisplay(context: RemoteLauncherDisplayContext): React.ReactElement {
-        return React.createElement(GeminiDisplay, context);
+        return React.createElement(AgentDisplay, context);
     }
 
     protected async runMainLoop(): Promise<void> {

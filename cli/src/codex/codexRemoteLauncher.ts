@@ -6,7 +6,7 @@ import { CodexPermissionHandler } from './utils/permissionHandler';
 import { ReasoningProcessor } from './utils/reasoningProcessor';
 import { DiffProcessor } from './utils/diffProcessor';
 import { logger } from '@/ui/logger';
-import { CodexDisplay } from '@/ui/ink/CodexDisplay';
+import { AgentDisplay, AGENT_CONFIGS } from '@/ui/ink/AgentDisplay';
 import { buildHapiMcpBridge } from './utils/buildHapiMcpBridge';
 import { emitReadyIfIdle } from './utils/emitReadyIfIdle';
 import type { CodexSession } from './session';
@@ -42,8 +42,12 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
         this.appServerClient = new CodexAppServerClient();
     }
 
+    protected getDisplayConfig() {
+        return AGENT_CONFIGS.codex;
+    }
+
     protected createDisplay(context: RemoteLauncherDisplayContext): React.ReactElement {
-        return React.createElement(CodexDisplay, context);
+        return React.createElement(AgentDisplay, context);
     }
 
     private async handleAbort(): Promise<void> {

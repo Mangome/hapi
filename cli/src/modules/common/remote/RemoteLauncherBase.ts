@@ -1,11 +1,13 @@
 import { render } from 'ink';
 import type { ReactElement } from 'react';
 import { MessageBuffer } from '@/ui/ink/messageBuffer';
+import type { AgentDisplayConfig } from '@/ui/ink/AgentDisplay';
 import { restoreTerminalState } from '@/ui/terminalState';
 
 export type RemoteLauncherExitReason = 'switch' | 'exit';
 
 export type RemoteLauncherDisplayContext = {
+    config: AgentDisplayConfig;
     messageBuffer: MessageBuffer;
     logPath?: string;
     onExit: () => void | Promise<void>;
@@ -45,6 +47,8 @@ export abstract class RemoteLauncherBase {
 
     protected abstract createDisplay(context: RemoteLauncherDisplayContext): ReactElement;
 
+    protected abstract getDisplayConfig(): AgentDisplayConfig;
+
     protected abstract runMainLoop(): Promise<void>;
 
     protected abstract cleanup(): Promise<void>;
@@ -53,6 +57,7 @@ export abstract class RemoteLauncherBase {
         if (this.hasTTY) {
             console.clear();
             this.inkInstance = render(this.createDisplay({
+                config: this.getDisplayConfig(),
                 messageBuffer: this.messageBuffer,
                 logPath: this.logPath,
                 onExit: handlers.onExit,

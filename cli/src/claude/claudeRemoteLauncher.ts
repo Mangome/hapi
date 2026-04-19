@@ -1,6 +1,6 @@
 import React from "react";
 import { Session } from "./session";
-import { RemoteModeDisplay } from "@/ui/ink/RemoteModeDisplay";
+import { AgentDisplay, AGENT_CONFIGS } from "@/ui/ink/AgentDisplay";
 import { claudeRemote } from "./claudeRemote";
 import { PermissionHandler } from "./utils/permissionHandler";
 import { Future } from "@/utils/future";
@@ -37,8 +37,12 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
         this.session = session;
     }
 
+    protected getDisplayConfig() {
+        return AGENT_CONFIGS.claude;
+    }
+
     protected createDisplay(context: RemoteLauncherDisplayContext): React.ReactElement {
-        return React.createElement(RemoteModeDisplay, context);
+        return React.createElement(AgentDisplay, context);
     }
 
     private async abort(): Promise<void> {

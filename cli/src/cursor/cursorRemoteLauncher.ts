@@ -4,7 +4,7 @@ import { createInterface } from 'node:readline';
 import { logger } from '@/ui/logger';
 import { killProcessByChildProcess } from '@/utils/process';
 import { convertAgentMessage } from '@/agent/messageConverter';
-import { OpencodeDisplay } from '@/ui/ink/OpencodeDisplay';
+import { AgentDisplay, AGENT_CONFIGS } from '@/ui/ink/AgentDisplay';
 import {
     RemoteLauncherBase,
     type RemoteLauncherDisplayContext,
@@ -64,8 +64,12 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
         });
     }
 
+    protected getDisplayConfig() {
+        return AGENT_CONFIGS.cursor;
+    }
+
     protected createDisplay(context: RemoteLauncherDisplayContext): React.ReactElement {
-        return React.createElement(OpencodeDisplay, context);
+        return React.createElement(AgentDisplay, context);
     }
 
     protected async runMainLoop(): Promise<void> {
